@@ -13,14 +13,14 @@ def download_youtube_video(url):
         video_streams = yt.streams.filter(type="video").order_by('resolution').desc()
         audio_stream = yt.streams.filter(only_audio=True).first()
 
-        print("Available video streams:")
-        for i, stream in enumerate(video_streams):
-            size = get_video_size(stream)
-            stream_type = "Progressive" if stream.is_progressive else "Adaptive"
-            print(f"{i}. Resolution: {stream.resolution}, Size: {size:.2f} MB, Type: {stream_type}")
+        # print("Available video streams:")
+        # for i, stream in enumerate(video_streams):
+        #     size = get_video_size(stream)
+        #     stream_type = "Progressive" if stream.is_progressive else "Adaptive"
+        #     print(f"{i}. Resolution: {stream.resolution}, Size: {size:.2f} MB, Type: {stream_type}")
 
-        choice = int(input("Enter the number of the video stream to download: "))
-        selected_stream = video_streams[choice]
+        # choice = int(input("Enter the number of the video stream to download: "))
+        selected_stream = video_streams.get_highest_resolution()
 
         if not os.path.exists('videos'):
             os.makedirs('videos')
@@ -34,7 +34,7 @@ def download_youtube_video(url):
 
             print("Merging video and audio...")
             output_file = os.path.join('videos', f"{yt.title}.mp4")
-            stream = ffmpeg.input(video_file)
+            stream = ffmpeg.input(video_file).filter('crop', 'in_w-2*9', 'in_h-2*16')
             audio = ffmpeg.input(audio_file)
             stream = ffmpeg.output(stream, audio, output_file, vcodec='libx264', acodec='aac', strict='experimental')
             ffmpeg.run(stream, overwrite_output=True)
